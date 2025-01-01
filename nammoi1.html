@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxi Khánh Duy</title>
+    <link rel="stylesheet" href="taxi_khánh_duy.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Taxi Khánh Duy</h1>
+        <div class="price-check">
+            <h3>Kiểm tra giá dịch vụ</h3>
+            <div class="form-group">
+                <label for="pickup">Điểm đón:</label>
+                <input type="text" id="pickup" placeholder="Nhập điểm đón">
+            </div>
+            <div class="form-group">
+                <label for="destination">Điểm đến:</label>
+                <input type="text" id="destination" placeholder="Nhập điểm đến">
+            </div>
+            <div class="form-group">
+                <label for="date">Ngày đi:</label>
+                <input type="date" id="date">
+            </div>
+            <div class="form-group">
+                <label for="time">Giờ đi:</label>
+                <input type="time" id="time">
+            </div>
+            <div class="form-group">
+                <label for="distance">Độ dài quãng đường (km):</label>
+                <input type="number" id="distance" placeholder="Nhập độ dài quãng đường" oninput="calculatePrice()">
+            </div>
+            <div class="form-group">
+                <label for="trip-type">Chọn loại chuyến đi:</label>
+                <select id="trip-type" onchange="calculatePrice()">
+                    <option value="one-way">1 chiều</option>
+                    <option value="round-trip">2 chiều</option>
+                </select>
+            </div>
+            <div class="result" id="result"></div>
+        </div>
+
+        <div class="booking-info">
+            <h3>Thông tin liên hệ</h3>
+            <div class="form-group">
+                <label for="fullname">Họ và tên:</label>
+                <input type="text" id="fullname" placeholder="Nhập họ và tên" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Số điện thoại:</label>
+                <input type="text" id="phone" placeholder="Nhập số điện thoại" required oninput="validatePhone()">
+                <div class="error" id="phone-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="notes">Ghi chú (mã giảm giá, yêu cầu đặc biệt,...):</label>
+                <input type="text" id="notes" placeholder="Nhập ghi chú">
+            </div>
+            <button onclick="submitBooking()">Đặt xe</button>
+        </div>
+    </div>
+
+    <script>
+        function saveBookingDetails() {
+            const bookingDetails = {
+                fullname: document.getElementById("fullname").value,
+                phone: document.getElementById("phone").value,
+                notes: document.getElementById("notes").value,
+                pickup: document.getElementById("pickup").value,
+                destination: document.getElementById("destination").value,
+                date: document.getElementById("date").value,
+                time: document.getElementById("time").value,
+                distance: document.getElementById("distance").value,
+                tripType: document.getElementById("trip-type").value,
+            };
+            
+            fetch("/save-booking", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bookingDetails)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Đặt xe thành công và thông tin đã được lưu!");
+                } else {
+                    alert("Có lỗi xảy ra khi lưu thông tin!");
+                }
+            })
+            .catch(error => console.error("Error saving booking:", error));
+        }
+
+        function submitBooking() {
+            saveBookingDetails();
+        }
+        
+        function calculatePrice() {
+            let distance = parseFloat(document.getElementById("distance").value);
+            let tripType = document.getElementById("trip-type").value;
+            let resultDiv = document.getElementById("result");
+            let pricePerKm;
+            let price;
+
+            if (distance <= 1) {
+                pricePerKm = 25000;
+            } else if (distance <= 5) {
+                pricePerKm = 15000;
+            } else if (distance <= 30) {
+                pricePerKm = 12000;
+            } else {
+                pricePerKm = 9000;
+            }
+
+            price = distance * pricePerKm;
+
+            if (tripType === "round-trip") {
+                price += distance * 3500;
+            }
+
+            resultDiv.innerHTML = `Giá dịch vụ cho chuyến đi ${tripType === 'one-way' ? '1 chiều' : '2 chiều'} với quãng đường ${distance} km là: ${price.toLocaleString()} VND`;
+        }
+
+        function validatePhone() {
+            const phone = document.getElementById("phone").value;
+            const phoneError = document.getElementById("phone-error");
+            const phoneRegex = /^0[3|5|7|8|9][0-9]{8}$/;
+            if (!phoneRegex.test(phone)) {
+                phoneError.innerText = "Số điện thoại không hợp lệ! Vui lòng nhập lại.";
+            } else {
+                phoneError.innerText = "";
+            }
+        }
+
+        function submitBooking() {
+            const fullname = document.getElementById("fullname").value;
+            const phone = document.getElementById("phone").value;
+            const notes = document.getElementById("notes").value;
+            const pickup = document.getElementById("pickup").value;
+            const destination = document.getElementById("destination").value;
+            const date = document.getElementById("date").value;
+            const time = document.getElementById("time").value;
+            const distance = document.getElementById("distance").value;
+            const tripType = document.getElementById("trip-type").value;
+
+            if (!fullname || !phone) {
+                alert("Vui lòng nhập đầy đủ họ tên và số điện thoại!");
+                return;
+            }
+
+            alert("Đặt xe thành công. Chúng tôi sẽ liên hệ với bạn qua điện thoại hoặc Zalo.");
+        }
+    </script>
+</body>
+</html>
